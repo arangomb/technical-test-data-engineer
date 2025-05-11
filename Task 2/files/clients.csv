@@ -1,0 +1,7 @@
+id_cliente,tipo_identificacion,identificacion,nombre,ciudad,segmento,email,telefono
+1,CC,12345678,Juan Perez,Bogota,Residencial,juan.perez@mail.com,3001234567
+2,NIT,900123456-7,ACME S.A.,Medelli­n,Comercial,contacto@acme.com,6041234567
+3,CC,87654321,Maria Gomez,Cali,Residencial,maria.gomez@mail.com,3122345678
+4,CE,E123456,John Doe,Bucaramanga,Industrial,jdoe@mail.com,3173456789
+5,CC,23456789,Laura Rodri­guez,Barranquilla,Residencial,laura.rodriguez@mail.com,3054567890
+
