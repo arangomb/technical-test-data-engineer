@@ -1,0 +1,38 @@
+Resources:
+  StagingJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Description: Glue job to process data from raw to staging
+      Name: job-${self:custom.project}-staging
+      Role: !GetAtt StagingJobRole.Arn
+      ExecutionProperty:
+        MaxConcurrentRuns: 10
+      MaxRetries: 0
+      NumberOfWorkers: ${self:custom.jobNumberOfWorkers}
+      WorkerType: G.1X
+      GlueVersion: ${self:custom.glueJobVersion}
+      DefaultArguments:
+        "--ENERGY_BUCKET" : !Sub "s3://${self:custom.energyBucketName}-raw"
+      Command:
+        Name: glueetl
+        ScriptLocation: s3://${self:custom.projectBucket}/${self:custom.projectBucketJobsPath}/staging_job.py
+
+  TrustedJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Description: Glue job to process data from staging to trusted
+      Name: job-${self:custom.project}-trusted
+      Role: !GetAtt TrustedJobRole.Arn
+      ExecutionProperty:
+        MaxConcurrentRuns: 10
+      MaxRetries: 0
+      NumberOfWorkers: ${self:custom.jobNumberOfWorkers}
+      WorkerType: G.1X
+      GlueVersion: ${self:custom.glueJobVersion}
+      DefaultArguments:
+        "--ENERGY_BUCKET" : !Sub "s3://${self:custom.energyBucketName}-raw"
+        "--STAGING_PREFIX" : "staging"
+        "--TRUSTED_PREFIX" : "trusted"
+      Command:
+        Name: glueetl
+        ScriptLocation: s3://${self:custom.projectBucket}/${self:custom.projectBucketJobsPath}/trusted_job.py

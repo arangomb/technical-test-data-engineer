@@ -1,0 +1,15 @@
+name: func-${self:custom.project}-${self:custom.stage}-raw-loader
+handler: src/etl/raw_loader.handler
+role: RawLoaderRole
+environment:
+  energyBucketName: ${self:custom.energyBucketName}
+timeout: 30
+package:
+  include: 
+    - src/config/*
+    - src/etl/raw_loader.py
+    - src/services/raw_loader.py
+    - src/resources/file_manager.py
+    - src/utils/*
+
+vpc: ${file(serverless-files/vpc.yml)}

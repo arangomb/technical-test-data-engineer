@@ -1,4 +1,4 @@
-id_proveedor,nombre_proveedor,tipo_energia,fecha_contrato,ubicacion,tipo_contrato
+id Proveedor,nombre Proveedor,tipo Energia,fecha Contrato,ubicacion,tipoContrato
 1,Eolica del Norte,eolica,2024-07-04,La Guajira,PPA
 2,HidroSur,hidroelectrica,2024-11-08,Valle del Cauca,spot
 3,NuclearPowerCo,nuclear,2024-07-27,Caldas,PPA

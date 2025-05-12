@@ -1,0 +1,25 @@
+Resources:
+  EnergyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub s3-${self:custom.project}-${self:custom.stage}
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "aws:kms"
+              KMSMasterKeyID: ${self:custom.arnKms}
+
+Outputs:
+  EnergyBucketARN:
+    Description: ARN of s3 bucket for energy pipeline files
+    Value: !GetAtt EnergyBucket.Arn
+    Export:
+      Name: !Sub "${self:custom.project}-EnergyBucketARN"
+
+  EnergyBucketName:
+    Description: Name of s3 bucket for energy pipeline files
+    Value: s3-${self:custom.project}-${self:custom.stage}
+    Export:
+      Name: !Sub "${self:custom.project}-EnergyBucketName"

@@ -1,0 +1,220 @@
+Resources:
+  GlueCrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: iam-${self:custom.project}-${self:custom.stage}-GlueCrawlerRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${DataLakeBucketName}'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${self:custom.energyBucketName}'
+              - Effect: Allow
+                Action:
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:DeleteTable
+                  - glue:GetTable
+                  - glue:GetTables
+                Resource: '*'
+  
+  EventBridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: iam-${self:custom.project}-${self:custom.stage}-eventBridgeRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Path: /
+      Policies:
+        - PolicyName: "s3policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                Resource: 
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}"
+                  - !Sub "arn:aws:s3:::${self:custom.sourceSytemBucketName}/*"
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}/raw/*"
+        - PolicyName: "InvokeGlueCrawlerPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "glue:StartCrawler"
+                Resource: 
+                  - !GetAtt EnergyGlueClawer.Arn
+  
+  RawLoaderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: iam-${self:custom.project}-${self:custom.stage}-RawLoaderRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Description: "Lambda Role"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Path: /
+      Policies:
+        - PolicyName: "s3policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "s3:GetObject"
+                Resource: "*"
+              - Effect: Allow
+                Action: "s3:PutObject"
+                Resource: 
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}/raw/*"
+        - PolicyName: 'kms-policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'kms:Encrypt'
+                  - 'kms:Decrypt'
+                  - 'kms:GenerateDataKey'
+                Resource: "*"
+
+  StagingJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: iam-${self:custom.project}-${self:custom.stage}-stagingJobRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+        - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Path: /
+      Policies:
+        - PolicyName: "s3policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                Resource: 
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}"
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}/raw/*"
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:ListBucket"
+                Resource:
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}"
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}/staging/*"
+        - PolicyName: allow-kms
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "kms:Encrypt"
+                  - "kms:Decrypt"
+                  - "kms:GenerateDataKey"
+                Resource:
+                  - ${self:custom.kmsARN}
+
+  TrustedJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: iam-${self:custom.project}-${self:custom.stage}-trustedJobRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+        - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Path: /
+      Policies:
+        - PolicyName: "s3policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                Resource: 
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}"
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}/staging/*"
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:ListBucket"
+                Resource:
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}"
+                  - !Sub "arn:aws:s3:::${self:custom.energyBucketName}/trusted/*"
+        - PolicyName: allow-kms
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "kms:Encrypt"
+                  - "kms:Decrypt"
+                  - "kms:GenerateDataKey"
+                Resource:
+                  - ${self:custom.kmsARN}

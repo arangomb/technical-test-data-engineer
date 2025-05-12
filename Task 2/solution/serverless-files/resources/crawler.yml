@@ -1,0 +1,20 @@
+Resources:
+  EnergyGlueClawer:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: cw-${self:custom.project}-${self:custom.stage}-EnergyGlueClawer
+      Role: !GetAtt GlueCrawlerRole.Arn
+      DatabaseName: !Ref EnergyGlueDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub 's3://${self:custom.energyBucketName}/trusted/'
+      SchemaChagePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: DELETE_IN_DATABASE
+      
+Outputs:
+  EnergyGlueClawerName:
+    Description: Name of Energy Crawler 
+    Value: cw-${self:custom.project}-${self:custom.stage}-EnergyGlueClawer
+    Export:
+      Name: !Sub "${self:custom.project}-EnergyGlueClawer"

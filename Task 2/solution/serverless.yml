@@ -1,0 +1,38 @@
+service: ${self:custom.project}-jobs
+frameworkVersion: "3"
+useDotenv: true
+
+provider: ${file(./serverless-files/provider.yml)}
+    
+custom: ${file(./serverless-files/custom.yml)}
+
+package:
+  individually: true
+  exclude:
+    - ./**
+
+plugins:
+  - serverless-python-requirements
+  - serverless-plugin-common-excludes
+
+functions:
+  RawLoader: ${file(./serverless-files/functions/raw_loader.yml)}
+
+resources:
+  # ****************** Bucket ******************
+  - ${file(./serverless-files/resources/bucket.yml)}
+
+  # ****************** Roles ******************
+  - ${file(./serverless-files/resources/roles.yml)}
+
+  # ****************** Glue Databases ******************
+  - ${file(./serverless-files/resources/glue_database.yml)}
+
+  # ****************** Jobs ******************
+  - ${file(./serverless-files/resources/jobs.yml)}
+
+  # ****************** Events ******************
+  - ${file(./serverless-files/resources/events.yml)}
+
+    # ****************** Crawler ******************
+  - ${file(./serverless-files/resources/crawler.yml)}

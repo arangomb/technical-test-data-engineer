@@ -1,0 +1,34 @@
+Resources:
+
+  EventBridgeCrawlerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: EnergyCrawlerRule
+      Description: "Triggers Crawler when a file is created in S3"
+      EventPattern:
+        source:
+          - "aws.s3"
+        detail-type:
+          - "Object Created"
+        detail:
+          bucket:
+            name:
+              - ${self:custom.energyBucketName}
+          object:
+            key:
+              - prefix: "trusted/"
+      State: ENABLED
+      Targets:
+        - Arn: !Ref EnergyGlueClawer
+          RoleArn: !GetAtt EventBridgeRole.Arn
+
+  EventBridgeS3UploadRule:
+  Type: AWS::Events::Rule
+  Properties:
+    Name: EnergyS3UploadRule
+    Description: "Triggers raw-loader Lambda daily"
+    ScheduleExpression: cron(0 18 * * ? *)
+    State: ENABLED
+    Targets:
+      - Arn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:func-${self:custom.project}-${self:custom.stage}-raw-loader
+        RoleArn: !GetAtt EventBridgeRole.Arn
